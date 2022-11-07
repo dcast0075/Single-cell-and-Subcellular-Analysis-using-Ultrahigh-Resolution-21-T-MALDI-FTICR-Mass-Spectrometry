@@ -1,0 +1,31 @@
+mzXMLStruct = mzxmlread('D:\MagLab\21T Data\PrimaryHippocampalCulture\Cultured\Area2\300322_Sweedler_DHB_slide1_cultured_area2_MS1.mzxml')
+%%
+
+
+%change length to match number of scanes, extract peak and mz list as cell
+%then change the names of the cell
+for i = 1:length(cell);
+    peaks = mzXMLStruct.scan(i).peaks.mz;
+    peaks = peaks';
+    peaksmz{i,1} = peaks(1:2:end);
+    peaksintens{i,1} = peaks(2:2:end);
+    names{i,1} = 'Cultured_Area_2';
+end
+
+% create table with names, mz values and intens
+Cultured_Area_2 = table(names, peaksmz, peaksintens);
+% name variable the same as troy's structure to concatenate tables
+Cultured_Area_2.Properties.VariableNames = {'name','mz','intens'};
+%Use this table to add cells to then turn to structure forn alignment
+
+
+
+data = [c_area1_cell1; c_area1_cell2; c_area1_cell3; c_area2_cell1; c_area2_cell2; c_area3_cell1;...
+    c_area4_cell1; c_area5_cell1; uc_area1_cell1; uc_area1_cell2; uc_area1_cell3 ;uc_area2_cell1;...
+    uc_area2_cell2; uc_area2_cell3];
+% back to structure for alignment
+data = table2struct(data)
+
+
+
+
