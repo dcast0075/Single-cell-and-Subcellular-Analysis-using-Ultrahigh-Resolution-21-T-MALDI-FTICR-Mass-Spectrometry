@@ -1,0 +1,17 @@
+# Test selected features from Logistic Regression using Linear discriminate analysis
+
+C = classify(selectintens',truncintens',double(grpp));
+cp = classperf(grpp,C);
+cp.CorrectRate
+
+figure
+confusionchart(C,grpp)
+
+# Rank Feature IMportance
+[idx,scores] = fscmrmr(selectintens',grpp);
+
+scored = scores(idx)
+
+figure
+(bar(scores(idx)))
+xticklabels(selectmz(idx))
