@@ -1,0 +1,171 @@
+# Logistic regression, PCA, UMAP, and Subcellular Analysis
+
+import scipy.io as sio
+import numpy as np
+import pandas as pd
+import scanpy as sc
+import anndata as ad
+import matplotlib
+import matplotlib.pyplot as plt
+import os
+import seaborn as sns
+sc.settings.verbosity = 3
+sc.logging.print_header()
+sc.settings.set_figure_params(dpi=40, facecolor='white', dpi_save=300)
+
+
+# For some reason if you load the csv using this script, it misses a row. If you drag and drop it doesn't happen.
+obs = pd.read_csv('D:\MagLab\MagLab20220721.csv')
+
+obs= pd.DataFrame(data,columns = mzs,index = names_group)
+
+obs.columns = mzs
+obs.index = names_group
+
+
+
+adata = ad.AnnData(obs)
+
+adata._obs['namesgroup'] = names_group.astype(str)
+adata._obs['namesindividual'] = names_individual.astype(str)
+
+adata.var['mzs'] = mzs
+
+# Normalize 
+sc.pp.normalize_total(adata, target_sum=1e4,exclude_highly_expressed=False)
+sc.pp.log1p(adata)
+
+# Highly Expressed Genes
+sc.pl.highest_expr_genes(adata, n_top=8,save=False)
+
+# THis is how you call out specific columns by their mz value
+#z= adata[:,'500.02637']
+
+
+# variance ratio for number of PCs for UMAP embedding
+sc.tl.pca(adata, svd_solver='auto')
+sc.pl.pca(adata, color='namesgroup', size=50, add_outline=True, save='PCA.pdf')
+sc.pl.pca_variance_ratio(adata, log=True, n_pcs=50,save= 'VarianceRatio.pdf')
+
+
+# UMAP embedding
+sc.pp.neighbors(adata, n_neighbors=7, n_pcs=50, metric='cosine')
+sc.tl.umap(adata)
+sc.pl.umap(adata,color= 'namesgroup',size=40,add_outline =True,edges=False,edges_width=0.5,save='Group.pdf')
+sc.pl.umap(adata,color= 'namesindividual',size=40,add_outline =True,edges=True,edges_width=0.5,save='Individual.pdf')
+
+
+# Rank Genes by group
+
+sc.tl.rank_genes_groups(adata,groupby = 'namesgroup', method='logreg')
+sc.pl.rank_genes_groups(adata, n_genes=33, use_raw = False,sharey=False,save='groups.pdf')
+
+# Rank Genes by individual
+sc.tl.rank_genes_groups(adata,groupby = 'namesindividual', method='logreg')
+sc.pl.rank_genes_groups(adata, n_genes=33, use_raw = False,sharey=False,save='individual.pdf')
+
+
+
+
+# Create violin plot of distribution.
+
+
+importantmzs =  ['582.27301','614.29926','650.43921','664.45477','666.4342',
+'672.42126',
+'678.47028',
+'692.48633',
+'700.45251',
+'724.51245',
+'725.5567',
+'786.45544',
+'786.60089',
+'788.61646',
+'800.47089',
+'811.66003',
+'814.48645',
+'828.50232',
+'830.48138',
+'839.59106',
+'896.60132',
+'910.74957',
+'922.617']
+
+
+importantmzs =  ['582.27301',
+'614.29926',
+'650.43921',
+'664.45477',
+'666.4342',
+'672.42126',
+'678.47028',
+'692.48633',
+'700.45251',
+'703.57507',
+'724.51245',
+'725.5567',
+'786.45544',
+'786.60089',
+'788.61646',
+'800.47089',
+'811.66003',
+'814.48645',
+'828.50232',
+'830.48138',
+'839.59106',
+'896.60132',
+'910.74957',
+'922.617',
+'924.63275',
+'1036.7477']
+
+
+importantmzscurate =  ['582.27301',
+'614.29926',
+'650.43921',
+'664.45477',
+'666.4342',
+'672.42126',
+'678.47028',
+'692.48633',
+'700.45251',
+'724.51245',
+'725.5567',
+'786.45544',
+'786.60089',
+'800.47089',
+'811.66003',
+'814.48645',
+'828.50232',
+'830.48138',
+'839.59106',
+'896.60132',
+'910.74957',
+'922.617']
+
+
+sc.pl.stacked_violin(adata, importantmzs, groupby='namesgroup', rotation=90,cmap='RdBu_r',figsize=(6,2),use_raw=False,save='groupviolin.pdf');
+sc.pl.stacked_violin(adata, importantmzs, groupby='namesgroup', rotation=90,cmap='RdBu_r',figsize=(6,2),use_raw=False);
+
+
+## you can index with this
+z= obs[:,importantmzs]
+
+
+# Nucleus vs Processes Analysis
+
+nando = obs.iloc[34:144,:]
+
+adata_NucleusProcesses = ad.AnnData(nando)
+adata_NucleusProcesses._obs['Nucleus'] = Nucleus
+
+sc.tl.pca(adata_NucleusProcesses, svd_solver='auto')
+sc.pl.pca(adata_NucleusProcesses, color='Nucleus', size=30, add_outline=True)
+sc.pl.pca_variance_ratio(adata, log=True, n_pcs=50)
+
+adata_NucleusProcesses._obs['Nucleusprocessesbycell'] = nucleusprocessesbycell.astype(str)
+
+
+sc.pp.neighbors(adata_NucleusProcesses, n_neighbors=4, n_pcs=50, metric='cosine')
+sc.tl.umap(adata_NucleusProcesses)
+sc.pl.umap(adata_NucleusProcesses,color= ['Nucleus','Nucleusprocessesbycell'],size=50,add_outline =True,edges=False,edges_width=0.5,wspace =0.45)
+
