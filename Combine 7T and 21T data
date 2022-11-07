@@ -1,0 +1,45 @@
+mzXMLStruct = mzxmlread('D:\MagLab\21T Data\PrimaryHippocampalCulture\Cultured\Area1\300322_Sweedler_DHB_slide1_cultured_area1_MS1.mzxml')
+
+%change length to match number of scanes, extract peak and mz list as cell
+for i = 1:length(cell1);
+    peaks = mzXMLStruct.scan(i).peaks.mz;
+    peaks = peaks';
+    peaksmz{i} = peaks(1:2:end);
+    peaksintens{i} = peaks(2:2:end);
+end
+
+% convert to struct to table to store maglab intens, peaks, and names
+data2 = struct2table(data);
+
+%Import names with letters in them like Scan234 and import then as
+%string. THen you can combine with peak and intens list
+
+% create table with names, mz values and intens
+tabless = table(names, peaksmz', peaksintens');
+% name variable the same as troy's structure to concatenate tables
+tabless.Properties.VariableNames = {'name','mz','intens'};
+% combine tables
+tables2 = [data2;tabless]
+% back to structure for alignment
+combined_struct = table2struct(tables2)
+
+
+%% You need to select scans where cells were imaged for comparison
+% export ROI region location from MSiReader
+
+peaksintensselect = peaksintens(:,ROIinfo(:,1));
+
+peaksmzselect = peaksmz(:,ROIinfo(:,1));
+names2 = string(ROIinfo(:,1));
+
+% convert to struct to table to store maglab intens, peaks, and names
+data2 = struct2table(data);
+
+% create table with names, mz values and intens
+tabless = table(names2, peaksmzselect', peaksintensselect');
+% name variable the same as troy's structure to concatenate tables
+tabless.Properties.VariableNames = {'name','mz','intens'};
+% combine tables
+tables2 = [data2;tabless]
+% back to structure for alignment
+combined_struct = table2struct(tables2)
